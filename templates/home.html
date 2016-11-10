@@ -11,12 +11,21 @@
     </div>
 </form>
 {% if candidate_id %}
+    <div id="blank_template">
+        <p class="template_text">Notes on Candidate/Situation</p>
+        <p class="template_text">Current Compensation</p>
+        <p class="template_text">Existing Offers</p>
+        <p class="template_text">Suggested Offer</p>
+        <p class="template_text">Projected start date</p>
+        <p class="template_text">Team preference</p>
+    </div>
     <div id="headers">
         <p id="header_header">{{candidate.name}} received the following feedback</p>
         {% for header in headers %}
         <p>{{header.interview_type}}, {{header.interviewer}}  -  <b>{{header.score}}</b> </p>
 
         {% endfor %}
+        <p> Codetest - </p>
     </div>
     {% for feedback in feedbacks %}
     <div class="feedback_paragraph">
@@ -29,6 +38,7 @@
 
         <p class="fteam">Team: {{feedback.team_recommendation}}</p>
     </div>
+    <p class="template_text">References</p>
     {% endfor %}
 {% endif %} 
 {% endblock %}

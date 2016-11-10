@@ -1,3 +1,8 @@
+.template_text {
+    font-weight: bold;
+    text-decoration: underline;
+}
+
 #header_header {
     font-weight: bold;
     text-decoration: underline;

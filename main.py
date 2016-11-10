@@ -7,6 +7,7 @@ from flask import Flask
 from flask import redirect
 from flask import request
 from google.appengine.api import users
+from google.appengine.api import memcache
 
 from util import login
 from lever import LeverClient
@@ -36,9 +37,17 @@ def _compile_feedback(candidate_id):
     )
     feedbacks = [feedback for feedback in feedbacks if feedback['completedAt'] is not None]
     for feedback in feedbacks:
-        # TODO: We can probably cache this forever
         try:
-            user = lever_client.get_user(feedback['user'])
+            # TODO: We can probably cache this forever
+            user = memcache.get(feedback['user'])
+            if user is None:
+                user = lever_client.get_user(feedback['user'])
+                memcache.add(
+                    feedback['user'],
+                    user,
+                    60 * 60 * 24 * 7,
+                )
+
             feedback['username'] = user['name']
             feedback['score'] = feedback['fields'][2]['value']
             feedback['feedback_texts'] = feedback['fields'][0]['value'].split('\n')
