@@ -1,6 +1,8 @@
 *.pyc
 # don't include third-party dependencies.
 lib/
+bin/
+include/
 !lib/README.md
 .DS_Store
 secret.py
