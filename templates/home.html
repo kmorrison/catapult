@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<form method="POST" action='/fetch_feedback'>
+    <div>
+        <label for="name">Candidate ID</label>
+        <input type="text" id="candidate_form_id" name="candidate_id" />
+    </div>
+    <div class="button">
+        <button type="submit">Catapult!</button>
+    </div>
+</form>
+{% if candidate_id %}
+    <div id="headers">
+        <p id="header_header">{{candidate.name}} received the following feedback</p>
+        {% for header in headers %}
+        <p>{{header.interview_type}}, {{header.interviewer}}  -  <b>{{header.score}}</b> </p>
+
+        {% endfor %}
+    </div>
+    {% for feedback in feedbacks %}
+    <div class="feedback_paragraph">
+        <p>{{feedback.text}}</p>
+        <p>{{feedback.username}}</p>
+        <p>{{feedback.score}}</p>
+        <p>{{feedback.feedback_text}}
+        <p>Team: {{feedback.team_recommendation}}</p>
+    </div>
+    {% endfor %}
+{% endif %} 
+{% endblock %}
+
