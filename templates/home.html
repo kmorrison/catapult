@@ -23,7 +23,10 @@
         <p>{{feedback.text}}</p>
         <p>{{feedback.username}}</p>
         <p>{{feedback.score}}</p>
-        <p>{{feedback.feedback_text}}
+        {% for feedback_text in feedback.feedback_texts %}
+            <p>{{feedback_text}}</p>
+        {% endfor %}
+
         <p>Team: {{feedback.team_recommendation}}</p>
     </div>
     {% endfor %}

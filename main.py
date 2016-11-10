@@ -1,4 +1,5 @@
 """`main` is the top level module for your Flask application."""
+from pprint import pprint
 
 # Import the Flask Framework
 import flask
@@ -22,26 +23,36 @@ lever_client = LeverClient()
 
 def _compile_feedback(candidate_id):
     feedbacks = lever_client.get_candidate_feedback(candidate_id)
-    users = {}
     headers = []
+
+    def completed_at_or_phone(feedback):
+        if 'phone' in feedback['text'].lower():
+            return 0
+        return feedback['completedAt']
+
     feedbacks = sorted(
         feedbacks,
-        key=lambda x: x['createdAt'],
+        key=completed_at_or_phone,
     )
+    feedbacks = [feedback for feedback in feedbacks if feedback['completedAt'] is not None]
     for feedback in feedbacks:
         # TODO: We can probably cache this forever
-        user = lever_client.get_user(feedback['user'])
-        users['id'] = user
-        feedback['username'] = user['name']
-        feedback['score'] = feedback['fields'][2]['value']
-        feedback['feedback_text'] = feedback['fields'][0]['value']
-        feedback['team_recommendation'] = feedback['fields'][1]['value']
+        try:
+            user = lever_client.get_user(feedback['user'])
+            feedback['username'] = user['name']
+            feedback['score'] = feedback['fields'][2]['value']
+            feedback['feedback_texts'] = feedback['fields'][0]['value'].split('\n')
+            feedback['team_recommendation'] = feedback['fields'][1]['value']
 
-        headers.append(dict(
-            score=feedback['fields'][2]['value'],
-            interviewer=user['name'].strip(),
-            interview_type=feedback['text'].strip(),
-        ))
+            headers.append(dict(
+                score=feedback['fields'][2]['value'],
+                interviewer=user['name'].strip(),
+                interview_type=feedback['text'].strip(),
+            ))
+            pprint(feedback)
+        except:
+            print 11111, 'failure!'
+            pprint(feedback)
     return headers, feedbacks
 
 
