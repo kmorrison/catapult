@@ -6,3 +6,19 @@
 .feedback_paragraph {
     margin-top: 40px;
 }
+
+.ftext {
+    font-weight: bold;
+    text-decoration: underline;
+    margin: 0px;
+}
+
+.fuser {
+    font-weight: bold;
+    margin: 0px;
+}
+
+.fscore {
+    font-weight: bold;
+    margin-top: 0px;
+}

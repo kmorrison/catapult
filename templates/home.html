@@ -20,14 +20,14 @@
     </div>
     {% for feedback in feedbacks %}
     <div class="feedback_paragraph">
-        <p>{{feedback.text}}</p>
-        <p>{{feedback.username}}</p>
-        <p>{{feedback.score}}</p>
+        <p class="ftext">{{feedback.text}}</p>
+        <p class="fuser">{{feedback.username}}</p>
+        <p class="fscore">{{feedback.score}}</p>
         {% for feedback_text in feedback.feedback_texts %}
-            <p>{{feedback_text}}</p>
+            <p class="ffeed">{{feedback_text}}</p>
         {% endfor %}
 
-        <p>Team: {{feedback.team_recommendation}}</p>
+        <p class="fteam">Team: {{feedback.team_recommendation}}</p>
     </div>
     {% endfor %}
 {% endif %} 
