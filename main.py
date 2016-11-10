@@ -16,7 +16,7 @@ app = Flask(__name__)
 # Note: We don't need to call run() since our application is embedded within
 # the App Engine WSGI application server.
 
-APP_NAME = 'catapult'
+APP_NAME = 'Catapult'
 
 
 lever_client = LeverClient()

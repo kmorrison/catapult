@@ -1,16 +1,26 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<form method="POST" action='/fetch_feedback'>
-    <div>
-        <label for="name">Candidate ID</label>
-        <input type="text" id="candidate_form_id" name="candidate_id" />
+<div class="input">
+  <form method="POST" action="/fetch_feedback" class="yform">
+    <div class="arrange arrange--12">
+      <div class="arrange_unit arrange_unit--fill">
+        <label class="pseudo-input">
+          <span class="pseudo-input_text">Candidate ID</span>
+          <span class="pseudo-input_field-holder">
+            <input name="form-arrange-3" placeholder="cf777b82-7fae-47cd-81af-a1b0664514a4" value="" class="pseudo-input_field" type="text">
+          </span>
+        </label>
+      </div>
+      <div class="arrange_unit">
+        <button type="submit" value="submit" class="ybtn ybtn--primary ybtn--small"><span>Catapult!</span></button>
+      </div>
     </div>
-    <div class="button">
-        <button type="submit">Catapult!</button>
-    </div>
-</form>
+  </form>
+</div>
+
 {% if candidate_id %}
+<div class="feedback">
     <div id="headers">
         <p id="header_header">{{candidate.name}} received the following feedback</p>
         {% for header in headers %}
@@ -30,6 +40,7 @@
         <p class="fteam">Team: {{feedback.team_recommendation}}</p>
     </div>
     {% endfor %}
+</div>
 {% endif %} 
 {% endblock %}
 
