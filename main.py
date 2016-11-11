@@ -41,7 +41,7 @@ def _compile_feedback(candidate_id):
         feedbacks,
         key=completed_at_or_phone,
     )
-    feedbacks = [feedback for feedback in feedbacks if feedback['completedAt'] is not None]
+    feedbacks = [feedback for feedback in feedbacks if feedback['completedAt'] is not None and feedback['text'] != "Intern Evaluations"]
     for feedback in feedbacks:
         try:
             # TODO: We can probably cache this forever
@@ -59,18 +59,19 @@ def _compile_feedback(candidate_id):
                 feedback['fields'],
                 u'Rating',
             )
+            headers.append(dict(
+                score=feedback['score'],
+                interviewer=user['name'].strip(),
+                interview_type=feedback['text'].strip(),
+            ))
             feedback['feedback_text'] = feedback['fields'][0]['value']
             feedback['team_suggestion'] = _extract_fields_as_keyval(
                 feedback['fields'],
                 u'Team Suggestions',
             )
 
-            headers.append(dict(
-                score=feedback['score'],
-                interviewer=user['name'].strip(),
-                interview_type=feedback['text'].strip(),
-            ))
-        except:
+        except Exception as e:
+            print e
             print 11111, 'failure!'
             pprint(feedback)
     return headers, feedbacks
@@ -133,11 +134,18 @@ def fetch_internevals():
     )
 
 
+def _more_than_four_months_old(timestamp):
+    import datetime
+    dt = datetime.datetime.fromtimestamp(timestamp/1000)
+    return datetime.datetime.now() - datetime.timedelta(days=120) > dt
+
+
 @app.route('/trebuchet/<candidate_id>')
 @login.login_required
 def intern_thing(candidate_id):
     """Return a friendly HTTP greeting."""
     feedbacks = lever_client.get_candidate_feedback(candidate_id)
+    feedbacks = [feedback for feedback in feedbacks if feedback['completedAt'] is not None]
     feedbacks = sorted(
         feedbacks,
         key=lambda x: x['completedAt'],
@@ -147,6 +155,8 @@ def intern_thing(candidate_id):
     final_feedbacks = []
     for feedback in feedbacks:
         if feedback['text'] != 'Intern Evaluations':
+            continue
+        if _more_than_four_months_old(feedback['completedAt']):
             continue
         user = memcache.get(feedback['user'])
         if user is None:
@@ -167,7 +177,6 @@ def intern_thing(candidate_id):
     return flask.render_template(
         'trebuchet.html',
         feedbacks=final_feedbacks,
-        cleaned_fields=cleaned_fields,
         candidate=lever_client.get_candidate(candidate_id),
         headers=headers,
     )
