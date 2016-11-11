@@ -85,6 +85,30 @@ def fetch_feedback():
         '/feedback/%s' % (candidate_id,),
     )
 
+
+@app.route('/trebuchet/<candidate_id>')
+@login.login_required
+def intern_thing(candidate_id):
+    """Return a friendly HTTP greeting."""
+    feedbacks = lever_client.get_candidate_feedback(candidate_id)
+    feedbacks = sorted(
+        feedbacks,
+        key=lambda x: x['completedAt'],
+    )
+
+    final_feedbacks = []
+    for feedback in feedbacks:
+        if feedback['text'] != 'Intern Evaluations':
+            continue
+        fake_feedback = {}
+        for field in feedback['fields']:
+            fake_feedback[field['text']] = field['value']
+        final_feedbacks.append(fake_feedback)
+    return flask.render_template(
+        'trebuchet.html',
+        content_stuff=final_feedbacks,
+    )
+
 @app.route('/feedback/<candidate_id>')
 @login.login_required
 def feedback(candidate_id):
