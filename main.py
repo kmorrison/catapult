@@ -22,6 +22,12 @@ APP_NAME = 'Catapult'
 
 lever_client = LeverClient()
 
+def _extract_fields_as_keyval(fields, key):
+    for field in fields:
+        if field['text'] == key:
+            return field['value']
+    raise KeyError(key)
+
 def _compile_feedback(candidate_id):
     feedbacks = lever_client.get_candidate_feedback(candidate_id)
     headers = []
@@ -49,12 +55,19 @@ def _compile_feedback(candidate_id):
                 )
 
             feedback['username'] = user['name']
-            feedback['score'] = feedback['fields'][2]['value']
+            print 1111111, [field['text'] for field in feedback['fields']]
+            feedback['score'] = _extract_fields_as_keyval(
+                feedback['fields'],
+                u'Rating',
+            )
             feedback['feedback_texts'] = feedback['fields'][0]['value'].split('\n')
-            feedback['team_recommendation'] = feedback['fields'][1]['value']
+            feedback['team_suggestion'] = _extract_fields_as_keyval(
+                feedback['fields'],
+                u'Team Suggestions',
+            )
 
             headers.append(dict(
-                score=feedback['fields'][2]['value'],
+                score=feedback['score'],
                 interviewer=user['name'].strip(),
                 interview_type=feedback['text'].strip(),
             ))
@@ -80,6 +93,7 @@ def home():
 @login.login_required
 def fetch_feedback():
     """Return a friendly HTTP greeting."""
+    print 1111111111
     candidate_id = request.form['candidate_id']
     return redirect(
         '/feedback/%s' % (candidate_id,),
