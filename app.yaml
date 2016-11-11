@@ -18,6 +18,8 @@ handlers:
   static_dir: public/css
 - url: /js
   static_dir: public/js
+- url: /img
+  static_dir: public/img
 
 # App Engine serves and caches static files contained in the listed directories
 # (and subdirectories). Uncomment and set the directory as needed.

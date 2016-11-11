@@ -6,21 +6,28 @@
         {{ title }}
         
     </title>
-    <link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="/css/default.css">
     <link rel="stylesheet" type="text/css" href="/css/catapult.css">
     <script src="//code.jquery.com/jquery-2.1.3.min.js"></script>
     <script src="/js/catapult.js"></script>
   </head>
   <body>
-    <header>
-        <div>catapult</div>
-    </header>
 
-    <div class='content'>
-    
+    <div class="main-header--flat main-header main-content-wrap js-main-header webview-hidden main-header--slim">
+      <div class="content-container">
+        <div class="arrange arrange--18 main-header_arrange arrange--middle u-dead-center">
+          <div class="arrange_unit nowrap">
+            <h2 class="main-header_title"><img class="logo" src="/img/catapult-actual.png"> <span>Catapult</span></h2>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class='content y-container y-container--full'>
+
       {% block content %}{% endblock %}
-    
+
     </div>
   </body>
 </html>

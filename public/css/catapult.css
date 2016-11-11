@@ -1,3 +1,8 @@
+.logo {
+    height: 35px;
+    width: 35px;
+}
+
 .template_text {
     font-weight: bold;
     text-decoration: underline;
@@ -26,4 +31,23 @@
 .fscore {
     font-weight: bold;
     margin-top: 0px;
+}
+
+.y-container .input {
+    margin: 0 auto;
+    padding: 40px 40px 5px 40px;
+    width: 900px;
+}
+
+.y-container .feedback {
+    background-color: white;
+    border-bottom: 1px solid #ccc;
+    border-top: 1px solid #ccc;
+    padding-bottom: 20px;
+    padding-top: 20px;
+}
+
+.y-container .feedback div {
+    margin: 0 auto;
+    width: 900px;
 }
