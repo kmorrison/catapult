@@ -3,6 +3,15 @@
     width: 35px;
 }
 
+h2 a {
+    color: white;
+}
+
+h2 img {
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
 .template_text {
     font-weight: bold;
     text-decoration: underline;

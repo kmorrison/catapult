@@ -109,10 +109,27 @@ def home():
 @login.login_required
 def fetch_feedback():
     """Return a friendly HTTP greeting."""
-    print 1111111111
     candidate_id = request.form['candidate_id']
     return redirect(
         '/feedback/%s' % (candidate_id,),
+    )
+
+@app.route('/treb')
+@login.login_required
+def treb():
+    return flask.render_template(
+        'trebuchet.html',
+        title=APP_NAME,
+    )
+
+
+@app.route('/fetch_internevals', methods=['POST'])
+@login.login_required
+def fetch_internevals():
+    """Return a friendly HTTP greeting."""
+    candidate_id = request.form['candidate_id']
+    return redirect(
+        '/trebuchet/%s' % (candidate_id,),
     )
 
 
