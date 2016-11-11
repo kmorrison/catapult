@@ -23,11 +23,17 @@
 <div class="feedback">
     <div id="blank_template">
         <p class="template_text">Notes on Candidate/Situation</p>
+        <br>
         <p class="template_text">Current Compensation</p>
+        <br>
         <p class="template_text">Existing Offers</p>
+        <br>
         <p class="template_text">Suggested Offer</p>
+        <br>
         <p class="template_text">Projected start date</p>
+        <br>
         <p class="template_text">Team preference</p>
+        <br>
     </div>
     <div id="headers">
         <p id="header_header">{{candidate.name}} received the following feedback</p>
@@ -44,7 +50,7 @@
         <p class="fscore">{{feedback.score}}</p>
         <p class="fnotes">{{feedback.feedback_text}}</p>
 
-        <p class="fteam">Team: {{feedback.team_suggestion}}</p>
+        <p class="fteam">Team Suggestion: {{feedback.team_suggestion}}</p>
     </div>
     {% endfor %}
     <div>
