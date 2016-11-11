@@ -97,6 +97,8 @@ def _determine_intern_fields(fields):
     return cleaned_fields
 
 @app.route('/')
+@login.admin_required
+@login.company_login_required
 @login.login_required
 def home():
     """Return a friendly HTTP greeting."""
@@ -108,6 +110,8 @@ def home():
 
 @app.route('/fetch_feedback', methods=['POST'])
 @login.login_required
+@login.company_login_required
+@login.admin_required
 def fetch_feedback():
     """Return a friendly HTTP greeting."""
     candidate_id = request.form['candidate_id']
@@ -117,6 +121,8 @@ def fetch_feedback():
 
 @app.route('/treb')
 @login.login_required
+@login.company_login_required
+@login.admin_required
 def treb():
     return flask.render_template(
         'trebuchet.html',
@@ -126,6 +132,8 @@ def treb():
 
 @app.route('/fetch_internevals', methods=['POST'])
 @login.login_required
+@login.company_login_required
+@login.admin_required
 def fetch_internevals():
     """Return a friendly HTTP greeting."""
     candidate_id = request.form['candidate_id']
@@ -142,6 +150,8 @@ def _more_than_four_months_old(timestamp):
 
 @app.route('/trebuchet/<candidate_id>')
 @login.login_required
+@login.company_login_required
+@login.admin_required
 def intern_thing(candidate_id):
     """Return a friendly HTTP greeting."""
     feedbacks = lever_client.get_candidate_feedback(candidate_id)
@@ -183,6 +193,8 @@ def intern_thing(candidate_id):
 
 @app.route('/feedback/<candidate_id>')
 @login.login_required
+@login.company_login_required
+@login.admin_required
 def feedback(candidate_id):
     headers, feedbacks = _compile_feedback(candidate_id)
     candidate = lever_client.get_candidate(candidate_id)
@@ -193,15 +205,6 @@ def feedback(candidate_id):
         candidate=candidate,
         headers=headers,
         feedbacks=feedbacks,
-    )
-
-@app.route('/me')
-@login.login_required
-def me():
-    return flask.render_template(
-        'me.html',
-        title=APP_NAME,
-        user=users.get_current_user(),
     )
 
 @app.errorhandler(404)

@@ -20,7 +20,7 @@ def company_login_required(method):
         if user is None:
             return flask.redirect(users.create_login_url())
         email_domain = user.email().split('@')[-1]
-        if email_domain != '':
+        if email_domain != 'yelp.com':
             flask.abort(403)
 
         return method(*args, **kwargs)
