@@ -27,6 +27,13 @@ h2 img {
 .feedback_paragraph {
     margin-top: 40px;
 }
+.hlabel {
+    margin-bottom: 0px;
+}
+.hvalue {
+    margin-top: 0px;
+    font-weight: bold;
+}
 
 .fintern_label {
     font-weight: bold;
@@ -80,9 +87,9 @@ h2 img {
     border-top: 1px solid #ccc;
     padding-bottom: 20px;
     padding-top: 20px;
+    font-size: small;
 }
 
 .y-container .feedback div {
     margin: 0 auto;
-    width: 900px;
 }
