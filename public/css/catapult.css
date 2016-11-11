@@ -17,6 +17,22 @@
     margin-top: 40px;
 }
 
+.fintern_label {
+    font-weight: bold;
+    margin: 0px;
+}
+.fintern_text {
+    margin-top: 0px;
+    margin-left: 30px;
+    margin-bottom: 0px;
+}
+.fintern_notes {
+    margin-top: 0px;
+    margin-left: 30px;
+    margin-bottom: 0px;
+    white-space: pre-wrap;
+}
+
 .ftext {
     font-weight: bold;
     text-decoration: underline;
@@ -26,6 +42,10 @@
 .fuser {
     font-weight: bold;
     margin: 0px;
+}
+.fnotes {
+    margin: 0px;
+    white-space: pre-wrap;
 }
 
 .fscore {

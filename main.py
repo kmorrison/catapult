@@ -55,12 +55,11 @@ def _compile_feedback(candidate_id):
                 )
 
             feedback['username'] = user['name']
-            print 1111111, [field['text'] for field in feedback['fields']]
             feedback['score'] = _extract_fields_as_keyval(
                 feedback['fields'],
                 u'Rating',
             )
-            feedback['feedback_texts'] = feedback['fields'][0]['value'].split('\n')
+            feedback['feedback_text'] = feedback['fields'][0]['value']
             feedback['team_suggestion'] = _extract_fields_as_keyval(
                 feedback['fields'],
                 u'Team Suggestions',
@@ -71,13 +70,30 @@ def _compile_feedback(candidate_id):
                 interviewer=user['name'].strip(),
                 interview_type=feedback['text'].strip(),
             ))
-            pprint(feedback)
         except:
             print 11111, 'failure!'
             pprint(feedback)
     return headers, feedbacks
 
-
+def _determine_intern_fields(fields):
+    cleaned_fields = dict(
+        overall_score=None,
+        notes=None,
+        other_random_fields=[],
+    )
+    for field in fields:
+        if field['text'].lower().startswith('overall'):
+            cleaned_fields['overall_score'] = field['value']
+            continue
+        if field['text'].lower().startswith('notes'):
+            cleaned_fields['notes'] = field['value']
+            continue
+        clean_name = field['text'].split('-')[0].strip()
+        cleaned_fields['other_random_fields'].append((
+            clean_name,
+            field['value'],
+        ))
+    return cleaned_fields
 
 @app.route('/')
 @login.login_required
@@ -110,17 +126,33 @@ def intern_thing(candidate_id):
         key=lambda x: x['completedAt'],
     )
 
+    headers = []
     final_feedbacks = []
     for feedback in feedbacks:
         if feedback['text'] != 'Intern Evaluations':
             continue
-        fake_feedback = {}
-        for field in feedback['fields']:
-            fake_feedback[field['text']] = field['value']
-        final_feedbacks.append(fake_feedback)
+        user = memcache.get(feedback['user'])
+        if user is None:
+            user = lever_client.get_user(feedback['user'])
+            memcache.add(
+                feedback['user'],
+                user,
+                60 * 60 * 24 * 7,
+            )
+
+        cleaned_fields = _determine_intern_fields(feedback['fields'])
+        cleaned_fields['username'] = user['name']
+        final_feedbacks.append(cleaned_fields)
+        headers.append(dict(
+            score=cleaned_fields['overall_score'],
+            interviewer=user['name'].strip(),
+        ))
     return flask.render_template(
         'trebuchet.html',
-        content_stuff=final_feedbacks,
+        feedbacks=final_feedbacks,
+        cleaned_fields=cleaned_fields,
+        candidate=lever_client.get_candidate(candidate_id),
+        headers=headers,
     )
 
 @app.route('/feedback/<candidate_id>')

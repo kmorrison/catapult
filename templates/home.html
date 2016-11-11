@@ -42,11 +42,9 @@
         <p class="ftext">{{feedback.text}}</p>
         <p class="fuser">{{feedback.username}}</p>
         <p class="fscore">{{feedback.score}}</p>
-        {% for feedback_text in feedback.feedback_texts %}
-            <p class="ffeed">{{feedback_text}}</p>
-        {% endfor %}
+        <p class="fnotes">{{feedback.feedback_text}}</p>
 
-        <p class="fteam">Team: {{feedback.team_recommendation}}</p>
+        <p class="fteam">Team: {{feedback.team_suggestion}}</p>
     </div>
     {% endfor %}
     <div>

@@ -1,5 +1,33 @@
 {% extends 'base.html' %}
 
 {% block content %}
-{{content_stuff}}
+<div class="feedback">
+    <div id="headers">
+        <h4>{{candidate.name}}
+        <p id="header_header">Summary of Feedback Scores</p>
+        {% for header in headers %}
+        <p>{{header.interviewer}}  -  <b>{{header.score}}</b> </p>
+
+        {% endfor %}
+    </div>
+    {% for feedback in feedbacks %}
+    <div class="feedback_paragraph">
+        <p>--------</p>
+        <p>Overall Score: {{feedback.username}} - {{feedback.overall_score}}</p>
+        {% for label, text in feedback.other_random_fields %}
+        <p class="fintern_label">
+        {{label}}
+
+        </p>
+        <p class="fintern_text">
+        {{text}}
+        
+        </p>
+        {% endfor %}
+        <p class="fintern_label">Notes:</p>
+        <p class="fintern_notes">{{feedback.notes}}</p>
+
+    </div>
+    {% endfor %}
+</div>
 {% endblock %}
