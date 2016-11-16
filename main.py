@@ -28,6 +28,18 @@ def _extract_fields_as_keyval(fields, key):
             return field['value']
     raise KeyError(key)
 
+def _truncate_header(header):
+    # Strip out the word "Engineering" because it's redundant
+    if header['interview_type'].startswith('Engineering - '):
+        header['interview_type'] = header['interview_type'][len('Engineering - '):]
+    try:
+        score = int(header['score'][0])
+        header['score'] = str(score)
+    except Exception:
+        pass
+    return header
+
+
 def _compile_feedback(candidate_id):
     feedbacks = lever_client.get_candidate_feedback(candidate_id)
     headers = []
@@ -59,11 +71,13 @@ def _compile_feedback(candidate_id):
                 feedback['fields'],
                 u'Rating',
             )
-            headers.append(dict(
+            header = dict(
                 score=feedback['score'],
                 interviewer=user['name'].strip(),
                 interview_type=feedback['text'].strip(),
-            ))
+            )
+            headers.append(_truncate_header(header))
+
             feedback['feedback_text'] = feedback['fields'][0]['value']
             feedback['team_suggestion'] = _extract_fields_as_keyval(
                 feedback['fields'],

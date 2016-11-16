@@ -38,8 +38,7 @@
     <div id="headers">
         <p id="header_header">{{candidate.name}} received the following feedback</p>
         {% for header in headers %}
-        <p class="hlabel">{{header.interview_type}}, {{header.interviewer}}</p>
-        <p class="hvalue">{{header.score}}</p>
+        <p class="hlabel">{{header.interview_type}}, {{header.interviewer}} - <span class="hvalue">{{header.score}}</span></p>
 
         {% endfor %}
         <p> Codetest - </p>
