@@ -90,7 +90,19 @@ def _compile_feedback(candidate_id):
             pprint(feedback)
     return headers, feedbacks
 
-def _determine_intern_fields(fields):
+def _is_intern_form_v2(fields):
+    # New form was released that allowed the reviewer to provide notes for each
+    # evaluation metric, whereas before there was one overall notes field.
+    # Figure out which one we're presenting for.
+    notes_field_count = 0
+    for field in fields:
+        if field['text'].lower().startswith('notes'):
+            notes_field_count += 1
+        if notes_field_count > 1:
+            return True
+    return False
+
+def _determine_intern_fields_form_v1(fields):
     cleaned_fields = dict(
         overall_score=None,
         notes=None,
@@ -104,11 +116,51 @@ def _determine_intern_fields(fields):
             cleaned_fields['notes'] = field['value']
             continue
         clean_name = field['text'].split('-')[0].strip()
-        cleaned_fields['other_random_fields'].append((
-            clean_name,
-            field['value'],
+        cleaned_fields['other_random_fields'].append(dict(
+            label=clean_name,
+            text=field['value'],
         ))
     return cleaned_fields
+
+def _determine_intern_fields_form_v2(fields):
+    cleaned_fields = dict(
+        overall_score=None,
+        notes=None,
+        other_random_fields=[],
+    )
+    current_eval_field = {}
+    for field in fields:
+        if field['text'].lower().startswith('overall'):
+            cleaned_fields['overall_score'] = field['value']
+            continue
+        if field['text'].lower().startswith('notes'):
+            # Notes field corresponds to previous eval field in v2. Append to
+            # fields list then clear the slate.
+            current_eval_field['notes'] = field['value']
+            cleaned_fields['other_random_fields'].append(current_eval_field)
+            current_eval_field = {}
+            continue
+        clean_name = field['text'].split('-')[0].strip()
+        if current_eval_field:
+            # Have a current eval being considering means there was no notes,
+            # so we can persist the current as is and assume this iteration is
+            # starting a next one.
+            cleaned_fields['other_random_fields'].append(current_eval_field)
+            current_eval_field = {}
+        current_eval_field = dict(
+            label=clean_name,
+            text=field['value'],
+        )
+    if current_eval_field:
+        cleaned_fields['other_random_fields'].append(current_eval_field)
+    return cleaned_fields
+
+def _determine_intern_fields(fields):
+    if _is_intern_form_v2(fields):
+        return _determine_intern_fields_form_v2(fields)
+    else:
+        return _determine_intern_fields_form_v1(fields)
+
 
 @app.route('/')
 @login.admin_required

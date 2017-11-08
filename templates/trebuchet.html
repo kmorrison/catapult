@@ -32,18 +32,25 @@
     <div class="feedback_paragraph">
         <p>--------</p>
         <p>Overall Score: {{feedback.username}} - {{feedback.overall_score}}</p>
-        {% for label, text in feedback.other_random_fields %}
+        {% for field in feedback.other_random_fields %}
         <p class="fintern_label">
-        {{label}}
+        {{field.label}}
 
         </p>
         <p class="fintern_text">
-        {{text}}
+        {{field.text}}
         
         </p>
+        {% if field.notes %}
+        <p class="fintern_text">{{field.notes}}</p>
+        {% endif %}
+
         {% endfor %}
+
+        {% if feedback.notes %}
         <p class="fintern_label">Notes:</p>
         <p class="fintern_notes">{{feedback.notes}}</p>
+        {% endif %}
 
     </div>
     {% endfor %}
