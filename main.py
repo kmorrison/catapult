@@ -18,14 +18,17 @@ app = Flask(__name__)
 # the App Engine WSGI application server.
 
 APP_NAME = 'Catapult'
+TEAM_FEEDBACK_KEY = u"Did the candidate give you any information about their interests that would help determine team fit?"
 
 
 lever_client = LeverClient()
 
-def _extract_fields_as_keyval(fields, key):
+def _extract_fields_as_keyval(fields, key, allow_missing=False):
     for field in fields:
         if field['text'] == key:
             return field['value']
+    if allow_missing:
+        return ''
     raise KeyError(key)
 
 def _truncate_header(header):
@@ -79,9 +82,21 @@ def _compile_feedback(candidate_id):
             headers.append(_truncate_header(header))
 
             feedback['feedback_text'] = feedback['fields'][0]['value']
+
+
+            # There are two types of team feedback, the old "Team Suggestion"
+            # and the newer, really long one defined by TEAM_FEEDBACK_KEY.
+            # Account for both of these and conditionally include them in the
+            # feedback payload
             feedback['team_suggestion'] = _extract_fields_as_keyval(
                 feedback['fields'],
                 u'Team Suggestions',
+                allow_missing=True,
+            )
+            feedback['team_feedback'] = _extract_fields_as_keyval(
+                feedback['fields'],
+                TEAM_FEEDBACK_KEY,
+                allow_missing=True,
             )
 
         except Exception as e:
@@ -271,6 +286,7 @@ def feedback(candidate_id):
         candidate=candidate,
         headers=headers,
         feedbacks=feedbacks,
+        team_feedback_key=TEAM_FEEDBACK_KEY,
     )
 
 @app.errorhandler(404)
