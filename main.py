@@ -6,7 +6,6 @@ import flask
 from flask import Flask
 from flask import redirect
 from flask import request
-from google.appengine.api import users
 from google.appengine.api import memcache
 
 from util import login
@@ -223,10 +222,11 @@ def fetch_internevals():
     )
 
 
-def _more_than_four_months_old(timestamp):
+def _more_than_n_months_old(timestamp, n=7):
+    # https://jira.yelpcorp.com/browse/ENGREC-259, change lookback period to 7 months
     import datetime
     dt = datetime.datetime.fromtimestamp(timestamp/1000)
-    return datetime.datetime.now() - datetime.timedelta(days=120) > dt
+    return datetime.datetime.now() - datetime.timedelta(days=n * 30) > dt
 
 
 @app.route('/trebuchet/<candidate_id>')
@@ -245,9 +245,9 @@ def intern_thing(candidate_id):
     headers = []
     final_feedbacks = []
     for feedback in feedbacks:
-        if feedback['text'] != 'Intern Evaluations':
+        if not feedback['text'].startswith('Intern Evaluations'):
             continue
-        if _more_than_four_months_old(feedback['completedAt']):
+        if _more_than_n_months_old(feedback['completedAt'], n=7):
             continue
         user = memcache.get(feedback['user'])
         if user is None:
