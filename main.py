@@ -55,7 +55,7 @@ def _compile_feedback(candidate_id):
         feedbacks,
         key=completed_at_or_phone,
     )
-    feedbacks = [feedback for feedback in feedbacks if feedback['completedAt'] is not None and feedback['text'] != "Intern Evaluations"]
+    feedbacks = [feedback for feedback in feedbacks if feedback['completedAt'] is not None and not feedback['text'].startswith("Intern Evaluations")]
     for feedback in feedbacks:
         try:
             # TODO: We can probably cache this forever
