@@ -103,7 +103,6 @@ def _compile_feedback(candidate_id):
                 ANYTHING_ELSE_TO_KNOW_KEY,
                 allow_missing=True,
             )
-            pprint(feedback)
 
         except Exception as e:
             print e
