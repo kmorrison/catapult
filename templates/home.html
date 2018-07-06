@@ -55,6 +55,10 @@
         {% else %}
         <p class="fteam">Team Suggestion: {{feedback.team_suggestion}}</p>
         {% endif %}
+
+        {% if feedback.anything_else_we_should_know %}
+        <p class="fanything">{{anything_to_know_key}}: {{feedback.anything_else_we_should_know}}</p>
+        {% endif %}
     </div>
     {% endfor %}
     <div>

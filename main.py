@@ -18,6 +18,7 @@ app = Flask(__name__)
 
 APP_NAME = 'Catapult'
 TEAM_FEEDBACK_KEY = u"Did the candidate give you any information about their interests that would help determine team fit?"
+ANYTHING_ELSE_TO_KNOW_KEY = u"Is there anything else we should consider when making the final hiring decision?"
 
 
 lever_client = LeverClient()
@@ -97,6 +98,12 @@ def _compile_feedback(candidate_id):
                 TEAM_FEEDBACK_KEY,
                 allow_missing=True,
             )
+            feedback['anything_else_we_should_know'] = _extract_fields_as_keyval(
+                feedback['fields'],
+                ANYTHING_ELSE_TO_KNOW_KEY,
+                allow_missing=True,
+            )
+            pprint(feedback)
 
         except Exception as e:
             print e
@@ -287,6 +294,7 @@ def feedback(candidate_id):
         headers=headers,
         feedbacks=feedbacks,
         team_feedback_key=TEAM_FEEDBACK_KEY,
+        anything_to_know_key=ANYTHING_ELSE_TO_KNOW_KEY,
     )
 
 @app.errorhandler(404)
