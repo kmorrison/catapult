@@ -42,19 +42,47 @@ def _truncate_header(header):
         pass
     return header
 
+class InterviewTypes(object):
+    PROBLEM_SOLVING = 'problem solving'
+    SYSTEM_DESIGN = 'system design'
+    PLAYS_WELL = 'plays well with others'
+    OWNERSHIP = 'ownership'
+
+
+FEEDBACK_ORDERING = [
+    InterviewTypes.PROBLEM_SOLVING,
+    InterviewTypes.SYSTEM_DESIGN,
+    InterviewTypes.PLAYS_WELL,
+    InterviewTypes.OWNERSHIP,
+]
+
+
+def _assign_arbitrary_feedback_ordering(feedback):
+    feedback_title = feedback['text'].lower()
+    for rank, interview_type in enumerate(FEEDBACK_ORDERING):
+        if interview_type in feedback_title:
+            # Increment by 1 since 0 is reserved for phone interviews, which
+            # must come first :P
+            return rank + 1
+    return None
+
 
 def _compile_feedback(candidate_id):
     feedbacks = lever_client.get_candidate_feedback(candidate_id)
     headers = []
 
-    def completed_at_or_phone(feedback):
+    def arbitrary_order_to_be_consistent_with_docs(feedback):
+        # Regardless of if it's an arbitrary order or not, phone interviews
+        # always go first.
         if 'phone' in feedback['text'].lower():
             return 0
+        if _assign_arbitrary_feedback_ordering(feedback) is not None:
+            return _assign_arbitrary_feedback_ordering(feedback)
         return feedback['completedAt']
 
     feedbacks = sorted(
         feedbacks,
-        key=completed_at_or_phone,
+        key=arbitrary_order_to_be_consistent_with_docs,
     )
     feedbacks = [feedback for feedback in feedbacks if feedback['completedAt'] is not None and not feedback['text'].startswith("Intern Evaluations")]
     for feedback in feedbacks:
