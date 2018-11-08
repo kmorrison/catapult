@@ -79,6 +79,10 @@ h2 img {
     margin-top: 10px;
 }
 
+.fprompt {
+    font-style: italic;
+}
+
 .y-container .input {
     margin: 0 auto;
     padding: 40px 40px 5px 40px;
@@ -94,6 +98,10 @@ h2 img {
     font-size: small;
 }
 
-.y-container .feedback div {
+.y-container .feedback div .feedback_paragraph{
     margin: 0 auto;
+}
+
+div .textnotes {
+    margin-bottom: 15px;
 }

@@ -84,7 +84,11 @@ def _compile_feedback(candidate_id):
         feedbacks,
         key=arbitrary_order_to_be_consistent_with_docs,
     )
-    feedbacks = [feedback for feedback in feedbacks if feedback['completedAt'] is not None and not feedback['text'].startswith("Intern Evaluations")]
+    feedbacks = [
+        feedback for feedback in feedbacks
+        if feedback['completedAt'] is not None
+        and not feedback['text'].startswith("Intern Evaluations")
+    ]
     for feedback in feedbacks:
         try:
             # TODO: We can probably cache this forever
@@ -109,8 +113,19 @@ def _compile_feedback(candidate_id):
             )
             headers.append(_truncate_header(header))
 
+            FIELD_BLACKLIST = [
+                TEAM_FEEDBACK_KEY,
+                ANYTHING_ELSE_TO_KNOW_KEY,
+                u'Rating',
+            ]
             feedback['feedback_text'] = feedback['fields'][0]['value']
-
+            feedback['feedback_texts'] = [dict(
+                header=field['text'],
+                text=field['value'],
+            ) for field in feedback['fields']
+                if field['type'] == 'textarea'
+                and field['text'] not in FIELD_BLACKLIST
+            ]
 
             # There are two types of team feedback, the old "Team Suggestion"
             # and the newer, really long one defined by TEAM_FEEDBACK_KEY.

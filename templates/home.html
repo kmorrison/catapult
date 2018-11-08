@@ -48,7 +48,12 @@
         <p class="ftext">{{feedback.text}}</p>
         <p class="fuser">{{feedback.username}}</p>
         <p class="fscore">{{feedback.score}}</p>
-        <p class="fnotes">{{feedback.feedback_text}}</p>
+        {% for text in feedback.feedback_texts %}
+        <div class="textnotes">
+            <p class="fnotes fprompt">{{text.header}}</p>
+            <p class="fnotes">{{text.text}}</p>
+        </div>
+        {% endfor %}
 
         {% if feedback.team_feedback %}
         <p class="fteam">{{team_feedback_key}}: {{feedback.team_feedback}}</p>
