@@ -123,8 +123,7 @@ def _compile_feedback(candidate_id):
                 header=field['text'],
                 text=field['value'],
             ) for field in feedback['fields']
-                if field['type'] == 'textarea'
-                and field['text'] not in FIELD_BLACKLIST
+                if field['text'] not in FIELD_BLACKLIST
             ]
 
             # There are two types of team feedback, the old "Team Suggestion"
