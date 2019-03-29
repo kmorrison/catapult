@@ -35,7 +35,7 @@ def _truncate_header(header):
     # Strip out the word "Engineering" because it's redundant
     if header['interview_type'].startswith('Engineering - '):
         header['interview_type'] = header['interview_type'][len('Engineering - '):]
-    elif len(header['interviewe_type'].split('- ')) > 2:
+    elif len(header['interview_type'].split('- ')) > 2:
         # Tons of dashes in this title, probably really specific, take everything after last dash-space
         interview_type_list = header['interview_type'].split('- ')
         header['interview_type'] = interview_type_list[-1]
@@ -67,13 +67,12 @@ class StructuredInterviewSubdimensions(object):
     OWNERSHIP = 'Ownership'
     CONTINUOUS_IMPROVEMENT = 'Continuous Improvement'
 
-# TODO I don't think these are right
 COLOR_TO_DIMENSION_MAPPING = {
-    'Blue': StructuredInterviewSubdimensions.TECHNICAL_SKILL,
-    'Green': StructuredInterviewSubdimensions.LEADERSHIP,
+    'Red': StructuredInterviewSubdimensions.TECHNICAL_SKILL,
+    'Green': StructuredInterviewSubdimensions.CONTINUOUS_IMPROVEMENT,
+    'Blue': StructuredInterviewSubdimensions.LEADERSHIP,
     'Purple': StructuredInterviewSubdimensions.BUSINESS_INSIGHT,
-    'Red': StructuredInterviewSubdimensions.OWNERSHIP,
-    'Orange': StructuredInterviewSubdimensions.CONTINUOUS_IMPROVEMENT,
+    'Orange': StructuredInterviewSubdimensions.OWNERSHIP,
 }
 
 
@@ -110,8 +109,13 @@ def _assign_arbitrary_feedback_ordering(feedback):
             return rank + 1
     return None
 
+def _assign_user_colours(users):
+    colours = ['red', 'orange', 'blue', 'green', 'purple', 'pink']
+    return dict(zip(users, colours))
+
 def _compile_ballista_feedback(candidate_id, feedbacks=None):
     try:
+        all_interviewers = {}
         if feedbacks is None:
             feedbacks = lever_client.get_candidate_feedback(candidate_id)
 
@@ -145,6 +149,7 @@ def _compile_ballista_feedback(candidate_id, feedbacks=None):
                 feedback['fields'],
                 u'Rating',
             )
+            all_interviewers[user["username"]] = ""
             header = dict(
                 score=feedback['score'],
                 interviewer=user['username'].strip(),
@@ -195,10 +200,18 @@ def _compile_ballista_feedback(candidate_id, feedbacks=None):
             ).append(question)
 
         pprint(headers)
-        return headers, the_business
+        return headers, the_business, all_interviewers.keys()
     except Exception as e:
         print e
 
+def _format_the_business(the_business):
+    the_new_business = []
+    for subdimension,question_dict in the_business.iteritems():
+        the_new_business.append({
+            'subdimension': subdimension,
+            'questions': [ dict(question_text=question_text, answers=answers) for question_text, answers in question_dict.items()]
+        })
+    return the_new_business
 
 def _compile_feedback(candidate_id):
     feedbacks = lever_client.get_candidate_feedback(candidate_id)
@@ -459,17 +472,23 @@ def intern_thing(candidate_id):
 @login.company_login_required
 @login.admin_required
 def feedback(candidate_id):
-    headers, feedbacks = _compile_feedback(candidate_id)
+    headers, feedbacks, interviewers = _compile_ballista_feedback(candidate_id)
     candidate = lever_client.get_candidate(candidate_id)
+    meta = {
+        "colour_map": _assign_user_colours(interviewers),
+        "problem_solving": ", ".join([header["problem_solving_question"] for header in headers if header["problem_solving_question"] is not None]),
+        "system_design": ", ".join([header["system_design_question"] for header in headers if header["system_design_question"] is not None]),
+    }
     return flask.render_template(
         'home.html',
         title=APP_NAME,
         candidate_id=candidate_id,
         candidate=candidate,
         headers=headers,
-        feedbacks=feedbacks,
+        feedbacks=_format_the_business(feedbacks),
         team_feedback_key=TEAM_FEEDBACK_KEY,
         anything_to_know_key=ANYTHING_ELSE_TO_KNOW_KEY,
+        meta=meta
     )
 
 @app.errorhandler(404)
