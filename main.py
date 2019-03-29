@@ -35,6 +35,10 @@ def _truncate_header(header):
     # Strip out the word "Engineering" because it's redundant
     if header['interview_type'].startswith('Engineering - '):
         header['interview_type'] = header['interview_type'][len('Engineering - '):]
+    elif len(header['interviewe_type'].split('- ')) > 2:
+        # Tons of dashes in this title, probably really specific, take everything after last dash-space
+        interview_type_list = header['interview_type'].split('- ')
+        header['interview_type'] = interview_type_list[-1]
     try:
         score = int(header['score'][0])
         header['score'] = str(score)
@@ -56,6 +60,46 @@ FEEDBACK_ORDERING = [
     InterviewTypes.OWNERSHIP,
 ]
 
+class StructuredInterviewSubdimensions(object):
+    TECHNICAL_SKILL = 'Technical Skill'
+    LEADERSHIP = 'Leadership'
+    BUSINESS_INSIGHT = 'Business Insight'
+    OWNERSHIP = 'Ownership'
+    CONTINUOUS_IMPROVEMENT = 'Continuous Improvement'
+
+# TODO I don't think these are right
+COLOR_TO_DIMENSION_MAPPING = {
+    'Blue': StructuredInterviewSubdimensions.TECHNICAL_SKILL,
+    'Green': StructuredInterviewSubdimensions.LEADERSHIP,
+    'Purple': StructuredInterviewSubdimensions.BUSINESS_INSIGHT,
+    'Red': StructuredInterviewSubdimensions.OWNERSHIP,
+    'Orange': StructuredInterviewSubdimensions.CONTINUOUS_IMPROVEMENT,
+}
+
+
+def _everything_after_brackets(text):
+    i = text.find(']')
+    return text[i+1:].strip()
+
+
+def _extract_from_brackets(text):
+    i = text.find('[')
+    j = text.find(']')
+    return text[i+1:j].strip()
+
+
+def _extract_problem_solving(field):
+    if 'Problem Solving' in field['text']:
+        return field['value']
+    else:
+        return None
+
+def _extract_system_design(field):
+    if 'System Design' in field['text']:
+        return field['value']
+    else:
+        return None
+
 
 def _assign_arbitrary_feedback_ordering(feedback):
     feedback_title = feedback['text'].lower()
@@ -66,9 +110,99 @@ def _assign_arbitrary_feedback_ordering(feedback):
             return rank + 1
     return None
 
+def _compile_ballista_feedback(candidate_id, feedbacks=None):
+    try:
+        if feedbacks is None:
+            feedbacks = lever_client.get_candidate_feedback(candidate_id)
+
+        feedbacks = [
+            feedback for feedback in feedbacks
+            if feedback['completedAt'] is not None
+            and not feedback['text'].startswith("Intern Evaluations")
+        ]
+        FIELD_BLACKLIST = [
+            TEAM_FEEDBACK_KEY,
+            ANYTHING_ELSE_TO_KNOW_KEY,
+            u'Rating',
+        ]
+
+        the_business = {}
+        headers = []
+        questions = []
+        for feedback in feedbacks:
+            user = memcache.get(feedback['user'])
+            if user is None:
+                user = lever_client.get_user(feedback['user'])
+                memcache.add(
+                    feedback['user'],
+                    user,
+                    60 * 60 * 24 * 7,
+                )
+
+            pprint(user)
+            feedback['username'] = user['name']
+            feedback['score'] = _extract_fields_as_keyval(
+                feedback['fields'],
+                u'Rating',
+            )
+            header = dict(
+                score=feedback['score'],
+                interviewer=user['username'].strip(),
+                interview_type=feedback['text'].strip(),
+                problem_solving_question=_extract_problem_solving(feedback['fields'][0]),
+                system_design_question=_extract_system_design(feedback['fields'][0]),
+            )
+            headers.append(_truncate_header(header))
+
+            current_question = None
+            current_answer = None
+            for field in feedback['fields']:
+                if field['text'] in FIELD_BLACKLIST:
+                    continue
+
+                if field['text'].strip().startswith('['):
+                    current_question = field['text']
+                    current_answer = field['value']
+
+                if field['text'].startswith('Additional'):
+                    if current_question is None:
+                        # This should never happen, we should never get a
+                        # Context without a previous labelled question. However
+                        # if a question is poorly labelled or they forgot to
+                        # label it then this can happen and it's better not to
+                        # choke, so we just ignore it and hope someone notices
+                        # eventually :P
+                        continue
+                    question = dict(
+                        question_text=_everything_after_brackets(current_question),
+                        user=user['name'],
+                        username=user['username'],
+                        additional_context=field['value'],
+                        question_answer=current_answer,
+                        subdimension=COLOR_TO_DIMENSION_MAPPING[_extract_from_brackets(current_question)],
+                    )
+                    current_answer = None
+                    current_question = None
+                    questions.append(question)
+
+        for question in questions:
+            the_business.setdefault(
+                question['subdimension'],
+                {},
+            ).setdefault(
+                question['question_text'],
+                [],
+            ).append(question)
+
+        pprint(headers)
+        return headers, the_business
+    except Exception as e:
+        print e
+
 
 def _compile_feedback(candidate_id):
     feedbacks = lever_client.get_candidate_feedback(candidate_id)
+    _compile_ballista_feedback(candidate_id, feedbacks=feedbacks)
     headers = []
 
     def arbitrary_order_to_be_consistent_with_docs(feedback):
