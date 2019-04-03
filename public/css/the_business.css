@@ -19,7 +19,7 @@ td {
 }
 
 tr.question {
-    padding-top: 20px;    
+    margin-top: 400px;    
 }
 
 p {
@@ -27,7 +27,7 @@ p {
     margin-top: 10px;
 }
 
-img {
+.feedback img {
     position: absolute;
     top: 0px;
     right: 0px;

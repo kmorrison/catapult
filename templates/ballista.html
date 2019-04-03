@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="input">
+  <form method="POST" action="/fetch_ballista_feedback" class="yform">
+    <div class="arrange arrange--12">
+      <div class="arrange_unit arrange_unit--fill">
+        <label class="pseudo-input">
+          <span class="pseudo-input_text">Candidate ID</span>
+          <span class="pseudo-input_field-holder">
+            <input name="candidate_id" placeholder="cf777b82-7fae-47cd-81af-a1b0664514a4" value="" class="pseudo-input_field" type="text">
+          </span>
+        </label>
+      </div>
+      <div class="arrange_unit">
+        <button type="submit" value="submit" class="ybtn ybtn--primary ybtn--small"><span>Catapult!</span></button>
+      </div>
+    </div>
+  </form>
+</div>
+
+{% if candidate_id %}
+<div class="feedback">
+
+  <h1>Candidate: {{candidate_id}}</h1>
+
+    <p><b>Interviewers:</b></p>
+    <table>
+      {% for header in headers.values() %}
+      <tr>
+        <td style="background-color: {{header.display_color}}"/>
+        <td>{{header.interviewer}} - {{header.score}}</td>
+      </tr>
+      {% endfor %}
+    </table>
+
+    <br>
+    <p><b>Problem Solving:</b> {{problem_solving_questions}}</p>
+    <p><b>System Design:</b> {{system_design_questions}}</p>
+    <br>
+
+    {% for feedback in feedbacks %}
+      <!-- SUB-DIMENSION -->
+      <h1>{{feedback.subdimension}}</h1>
+      <table>
+        <!-- QUESTION -->
+        {% for question in feedback.questions %}
+          <tr class="question">
+            <td/>
+            <td>
+                <b>{{question.question_text}}</b> 
+                {% if question.answers|length > 1 %} 
+                {{question.num_yes}}/{{question.answers|length}} 
+                {% endif %}
+            </td>
+          </tr>
+          <!-- ANSWER -->
+          {% for answer in question.answers %}
+            <tr style="padding-bottom: 10px">
+              <!-- colour this answer -->
+              <td style="background-color: {{headers[answer.username].display_color}}"/>
+              <!-- actual answer -->
+              <td>{{answer.question_answer}}, {{answer.additional_context}}</td>
+            </tr>
+          {% endfor %}
+        {% endfor %}
+      </table>
+    {% endfor %}
+
+</div>
+{% endif %} 
+{% if not feedbacks %}
+<h2> Whoops, no feedback for this ID </h2>
+{% endif %}
+{% endblock %}

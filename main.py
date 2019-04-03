@@ -1,5 +1,6 @@
 """`main` is the top level module for your Flask application."""
 from pprint import pprint
+from collections import OrderedDict
 
 # Import the Flask Framework
 import flask
@@ -10,6 +11,7 @@ from google.appengine.api import memcache
 
 from util import login
 from lever import LeverClient
+import secret
 
 
 app = Flask(__name__)
@@ -58,6 +60,15 @@ FEEDBACK_ORDERING = [
     InterviewTypes.SYSTEM_DESIGN,
     InterviewTypes.PLAYS_WELL,
     InterviewTypes.OWNERSHIP,
+]
+
+DISPLAY_COLORS = [
+    'red',
+    'orange',
+    'blue',
+    'green',
+    'purple',
+    'pink',
 ]
 
 class StructuredInterviewSubdimensions(object):
@@ -130,10 +141,10 @@ def _compile_ballista_feedback(candidate_id, feedbacks=None):
             u'Rating',
         ]
 
-        the_business = {}
+        the_business = OrderedDict()
         headers = []
         questions = []
-        for feedback in feedbacks:
+        for i, feedback in enumerate(feedbacks):
             user = memcache.get(feedback['user'])
             if user is None:
                 user = lever_client.get_user(feedback['user'])
@@ -143,19 +154,18 @@ def _compile_ballista_feedback(candidate_id, feedbacks=None):
                     60 * 60 * 24 * 7,
                 )
 
-            pprint(user)
             feedback['username'] = user['name']
             feedback['score'] = _extract_fields_as_keyval(
                 feedback['fields'],
                 u'Rating',
             )
-            all_interviewers[user["username"]] = ""
             header = dict(
                 score=feedback['score'],
                 interviewer=user['username'].strip(),
                 interview_type=feedback['text'].strip(),
                 problem_solving_question=_extract_problem_solving(feedback['fields'][0]),
                 system_design_question=_extract_system_design(feedback['fields'][0]),
+                display_color=DISPLAY_COLORS[i % len(DISPLAY_COLORS)],
             )
             headers.append(_truncate_header(header))
 
@@ -199,23 +209,27 @@ def _compile_ballista_feedback(candidate_id, feedbacks=None):
                 [],
             ).append(question)
 
-        pprint(headers)
-        return headers, the_business, all_interviewers.keys()
+        return headers, the_business
     except Exception as e:
         print e
 
 def _format_the_business(the_business):
     the_new_business = []
-    for subdimension,question_dict in the_business.iteritems():
+    for subdimension, question_dict in the_business.iteritems():
         the_new_business.append({
             'subdimension': subdimension,
-            'questions': [ dict(question_text=question_text, answers=answers) for question_text, answers in question_dict.items()]
+            'questions': [dict(
+                    question_text=question_text,
+                    answers=answers,
+                    num_yes=sum(answer['question_answer'].startswith('Yes') for answer in answers),
+                )
+                for question_text, answers in question_dict.iteritems()
+            ]
         })
     return the_new_business
 
 def _compile_feedback(candidate_id):
     feedbacks = lever_client.get_candidate_feedback(candidate_id)
-    _compile_ballista_feedback(candidate_id, feedbacks=feedbacks)
     headers = []
 
     def arbitrary_order_to_be_consistent_with_docs(feedback):
@@ -394,6 +408,17 @@ def fetch_feedback():
         '/feedback/%s' % (candidate_id,),
     )
 
+@app.route('/fetch_ballista_feedback', methods=['POST'])
+@login.login_required
+@login.company_login_required
+@login.admin_required
+def fetch_ballista_feedback():
+    """Return a friendly HTTP greeting."""
+    candidate_id = request.form['candidate_id']
+    return redirect(
+        '/ballista/%s' % (candidate_id,),
+    )
+
 @app.route('/treb')
 @login.login_required
 @login.company_login_required
@@ -404,6 +429,15 @@ def treb():
         title=APP_NAME,
     )
 
+@app.route('/ballista')
+@login.login_required
+@login.company_login_required
+@login.admin_required
+def ballista():
+    return flask.render_template(
+        'ballista.html',
+        title=APP_NAME,
+    )
 
 @app.route('/fetch_internevals', methods=['POST'])
 @login.login_required
@@ -472,23 +506,37 @@ def intern_thing(candidate_id):
 @login.company_login_required
 @login.admin_required
 def feedback(candidate_id):
-    headers, feedbacks, interviewers = _compile_ballista_feedback(candidate_id)
+    headers, feedbacks, = _compile_feedback(candidate_id)
     candidate = lever_client.get_candidate(candidate_id)
-    meta = {
-        "colour_map": _assign_user_colours(interviewers),
-        "problem_solving": ", ".join([header["problem_solving_question"] for header in headers if header["problem_solving_question"] is not None]),
-        "system_design": ", ".join([header["system_design_question"] for header in headers if header["system_design_question"] is not None]),
-    }
     return flask.render_template(
         'home.html',
         title=APP_NAME,
         candidate_id=candidate_id,
         candidate=candidate,
         headers=headers,
+        feedbacks=feedbacks,
+        team_feedback_key=TEAM_FEEDBACK_KEY,
+        anything_to_know_key=ANYTHING_ELSE_TO_KNOW_KEY,
+    )
+
+@app.route('/ballista/<candidate_id>')
+@login.login_required
+@login.company_login_required
+@login.admin_required
+def ballista_feedback(candidate_id):
+    headers, feedbacks = _compile_ballista_feedback(candidate_id)
+    candidate = lever_client.get_candidate(candidate_id)
+    return flask.render_template(
+        'ballista.html',
+        title=APP_NAME,
+        candidate_id=candidate_id,
+        candidate=candidate,
+        headers=OrderedDict([(header['interviewer'], header) for header in headers]),
         feedbacks=_format_the_business(feedbacks),
         team_feedback_key=TEAM_FEEDBACK_KEY,
         anything_to_know_key=ANYTHING_ELSE_TO_KNOW_KEY,
-        meta=meta
+        problem_solving_questions=', '.join([header['problem_solving_question'] for header in headers if header.get('problem_solving_question')]),
+        system_design_questions=', '.join([header['system_design_question'] for header in headers if header.get('system_design_question')]),
     )
 
 @app.errorhandler(404)
@@ -502,4 +550,4 @@ def page_error(e):
     """Return a custom 500 error."""
     return 'Sorry, unexpected error: {}'.format(e), 500
 
-app.secret_key = 'Change me.'
+app.secret_key = secret.SECRET_KEY

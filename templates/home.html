@@ -21,47 +21,54 @@
 
 {% if candidate_id %}
 <div class="feedback">
+    <div id="blank_template">
+        <p class="template_text">Notes on Candidate/Situation</p>
+        <br>
+        <p class="template_text">Current Compensation</p>
+        <br>
+        <p class="template_text">Existing Offers</p>
+        <br>
+        <p class="template_text">Suggested Offer</p>
+        <br>
+        <p class="template_text">Projected start date</p>
+        <br>
+        <p class="template_text">Team preference</p>
+        <br>
+    </div>
+    <div id="headers">
+        <p id="header_header">{{candidate.name}} received the following feedback</p>
+        {% for header in headers %}
+        <p class="hlabel">{{header.interview_type}}, {{header.interviewer}} - <span class="hvalue">{{header.score}}</span></p>
 
-  <h1>{{candidate_id}}</h1>
-
-    <p><b>Interviewers:</b></p>
-    <table>
-      {% for header in headers %}
-      <tr>
-        <td style="background-color: {{meta.colour_map[header.interviewer]}}"/>
-        <td>{{header.interviewer}}</td>
-      </tr>
-      {% endfor %}
-    </table>
-
-    <br>
-    <p><b>Problem Solving:</b> {{meta.problem_solving}}</p>
-    <p><b>System Design:</b> {{meta.system_design}}</p>
-    <br>
-
-    {% for feedback in feedbacks %}
-      <!-- SUB-DIMENSION -->
-      <h1>{{feedback.subdimension}}</h1>
-      <table>
-        <!-- QUESTION -->
-        {% for question in feedback.questions %}
-          <tr class="question">
-            <td/>
-            <td><b>{{question.question_text}}</b></td>
-          </tr>
-          <!-- ANSWER -->
-          {% for answer in question.answers %}
-            <tr>
-              <!-- colour this answer -->
-              <td style="background-color: {{meta.colour_map[answer.username]}}"/>
-              <!-- actual answer -->
-              <td>{{answer.question_answer}} {{answer.additional_context}}</td>
-            </tr>
-          {% endfor %}
         {% endfor %}
-      </table>
-    {% endfor %}
+        <p> Codetest - </p>
+    </div>
+    {% for feedback in feedbacks %}
+    <div class="feedback_paragraph">
+        <p class="ftext">{{feedback.text}}</p>
+        <p class="fuser">{{feedback.username}}</p>
+        <p class="fscore">{{feedback.score}}</p>
+        {% for text in feedback.feedback_texts %}
+        <div class="textnotes">
+            <p class="fnotes fprompt">{{text.header}}</p>
+            <p class="fnotes">{{text.text}}</p>
+        </div>
+        {% endfor %}
 
+        {% if feedback.team_feedback %}
+        <p class="fteam">{{team_feedback_key}}: {{feedback.team_feedback}}</p>
+        {% else %}
+        <p class="fteam">Team Suggestion: {{feedback.team_suggestion}}</p>
+        {% endif %}
+
+        {% if feedback.anything_else_we_should_know %}
+        <p class="fanything">{{anything_to_know_key}}: {{feedback.anything_else_we_should_know}}</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+    <div>
+    <p class="template_text">References</p>
+    </div>
 </div>
 {% endif %} 
 {% if not feedbacks %}
